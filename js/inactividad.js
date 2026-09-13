@@ -1,13 +1,20 @@
 /* ============== BLOQUEO POR INACTIVIDAD ==============
  * La sesión de Supabase dura todo el día (ver auth.js) y eso está bien: lo que
  * no está bien es una pantalla con datos de productores abierta y desatendida
- * en la oficina. Esto NO cierra sesión ni borra nada de lo que había en
- * pantalla: solo la difumina y tapa con un formulario que pide la contraseña
- * de nuevo para seguir. "Continuar" reautentica contra Supabase con el mismo
- * email de la sesión activa (signInWithPassword), así que también repara sola
- * el caso en que el token ya haya vencido en segundo plano mientras estaba
- * bloqueada. Quien prefiera salir de verdad tiene el botón de cerrar sesión
- * ahí mismo, sin necesidad de acertar la contraseña primero.
+ * en la oficina. Esto NO cierra sesión ni pierde el trabajo en curso: al
+ * desbloquear, se vuelve a dibujar la misma vista desde los datos que ya están
+ * en memoria. "Continuar" reautentica contra Supabase con el mismo email de
+ * la sesión activa (signInWithPassword), así que también repara sola el caso
+ * en que el token ya haya vencido en segundo plano mientras estaba bloqueada.
+ * Quien prefiera salir de verdad tiene el botón de cerrar sesión ahí mismo,
+ * sin necesidad de acertar la contraseña primero.
+ *
+ * El difuminado (filter:blur) es solo visual -- no alcanza solo. El texto
+ * real sigue entero en el DOM detrás del desenfoque: "Ver código fuente",
+ * clic derecho → Inspeccionar, o Ctrl+A y copiar lo revela igual, sin
+ * necesidad de sacar el blur. Por eso, además de difuminar, se vacía el
+ * contenido real de #app -- lo único que puede tener datos de productores --
+ * y se lo vuelve a dibujar recién al desbloquear con éxito.
  */
 const INACTIVIDAD_LIMITE_MS = 30 * 60 * 1000;
 const INACTIVIDAD_CHEQUEO_MS = 15 * 1000;
@@ -46,6 +53,10 @@ function mostrarBloqueoInactividad() {
 
   const raiz = document.getElementById('root');
   if (raiz) raiz.classList.add('difuminado');
+  // El blur es cosmético: vaciar #app es lo que de verdad saca el dato real
+  // del DOM mientras está bloqueado.
+  const app = document.getElementById('app');
+  if (app) app.innerHTML = '';
 
   const minutos = Math.round(INACTIVIDAD_LIMITE_MS / 60000);
   const overlay = document.createElement('div');
@@ -93,10 +104,18 @@ function mostrarBloqueoInactividad() {
 }
 
 function quitarBloqueoInactividad() {
+  // Esta función también la llama detenerVigilanciaInactividad() en cada
+  // logout, incluso cuando nunca se llegó a bloquear -- ahí #app no se vació
+  // y no hay nada que redibujar (además, renderLogin() lo va a reemplazar
+  // igual un instante después).
+  const estabaBloqueado = bloqueadoPorInactividad;
   bloqueadoPorInactividad = false;
   ultimaActividadEn = Date.now();
   const raiz = document.getElementById('root');
   if (raiz) raiz.classList.remove('difuminado');
   const overlay = document.getElementById('bloqueo-inactividad');
   if (overlay) overlay.remove();
+  // Se vació #app al bloquear (ver mostrarBloqueoInactividad): redibuja la
+  // misma vista desde los datos que ya están en memoria, sin volver a pedirlos.
+  if (estabaBloqueado && typeof render === 'function') render();
 }

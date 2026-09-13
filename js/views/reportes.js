@@ -120,7 +120,10 @@ function pillSemaforo(estado) {
 
 async function cargarMisReportes() {
   const { data, error } = await obtenerReportes();
-  misReportesCache = error ? { error: error.message } : { rows: (data || []).filter(r => r.usuario_id === perfil.id) };
+  // enmascararFilaReporte solo toca usuario_nombre, que acá ni se muestra
+  // (siempre es "vos" -- ya filtrado por usuario_id). No cambia lo que se ve,
+  // pero mantiene el mismo criterio que las otras cuatro caches enmascaradas.
+  misReportesCache = error ? { error: error.message } : { rows: (data || []).filter(r => r.usuario_id === perfil.id).map(enmascararFilaReporte) };
   render();
 }
 
