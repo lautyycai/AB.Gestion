@@ -1,0 +1,101 @@
+.table{font-variant-numeric:tabular-nums}
+.barrow{display:grid;grid-template-columns:150px 1fr 65px;gap:10px;align-items:center;margin:10px 0;font-size:12px}
+.bar{height:9px;background:#EAE6DD;border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.tablewrap{overflow:auto;max-height:580px}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th,.table td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.table th{color:var(--muted);font-weight:650;position:sticky;top:0;background:#F0EDE6}
+.table tr:hover td{background:#F0EDE6}
+.th-filtro{display:flex;flex-direction:column;gap:4px}
+.th-select{font-size:11px;font-weight:500;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);max-width:130px}
+.auditoria-campo{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
+.auditoria-campo b{font-weight:650;color:var(--muted);flex:none}
+.auditoria-campo span{text-align:right}
+.link{color:var(--accent);cursor:pointer;font-weight:700}
+.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#E3EFE9;color:var(--accent);font-size:11px}
+.profile{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field{padding:10px;background:#F0EDE6;border-radius:8px}
+.field b{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.empty{padding:35px;text-align:center;color:var(--muted)}
+.back{border:0;background:#E3EFE9;color:var(--accent);border-radius:8px;padding:8px 12px;cursor:pointer}
+.search{min-width:260px}
+/* dashboard: iconos, medallas y barras con color por fila */
+.kpi-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.kpi-icon svg{width:17px;height:17px}
+.card h3 svg{flex:none;width:16px;height:16px;color:var(--muted)}
+.barrow:hover{background:#F0EDE6;border-radius:8px}
+.medal{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:800;color:#fff;margin-right:2px;flex:none}
+/* modal y formularios */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+/* toasts: por encima del modal (z-index 100) a proposito, porque la mayoria de estos mensajes
+   aparecen justo despues de cerrar un modal de confirmacion */
+#toast-root{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:10px;max-width:360px}
+.toast{padding:12px 16px 12px 14px;border-radius:10px;font-size:13px;box-shadow:0 10px 30px rgba(15,23,42,.22);display:flex;align-items:flex-start;gap:10px;animation:toast-in .2s ease-out}
+.toast-error{background:#F8ECE8;color:var(--danger);border:1px solid #F0D8CF}
+.toast-ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.toast span{flex:1}
+.toast button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none;opacity:.6}
+.toast button:hover{opacity:1}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.modal-box{background:#fff;border-radius:14px;max-width:600px;width:100%;max-height:88vh;overflow:auto;padding:26px;box-shadow:0 20px 60px rgba(15,23,42,.25)}
+.modal-box h2{margin:0 0 4px;font-size:19px}
+.modal-box .modal-sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.formgrid label{display:block;font-size:12px;font-weight:650;margin-bottom:5px;color:var(--ink)}
+.formgrid input,.formgrid select,.formgrid textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink)}
+.formgrid .full{grid-column:1 / -1}
+.formgrid .readonly{background:#F0EDE6;color:var(--muted)}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:38px !important}
+.pass-toggle{position:absolute !important;right:4px;top:50% !important;transform:translateY(-50%) !important;width:28px !important;height:28px;border:0 !important;background:none !important;color:var(--muted) !important;cursor:pointer;display:flex !important;align-items:center;justify-content:center;border-radius:6px;padding:0 !important;margin:0 !important;font-weight:400}
+.pass-toggle:hover{background:#F0EDE6 !important;color:var(--ink) !important}
+.pass-toggle svg{width:17px;height:17px}
+/* bloqueo por inactividad: el fondo se difumina pero no se borra ni se toca */
+#root.difuminado{filter:blur(8px) saturate(.9);transition:filter .2s ease}
+.inactividad-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:400;padding:20px}
+.inactividad-box{position:relative;width:340px;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,.3);padding:28px;text-align:center}
+.inactividad-box h2{margin:0 0 8px;font-size:19px}
+.inactividad-box p{margin:0 0 18px;color:var(--muted);font-size:13px;text-align:left}
+.inactividad-box form{text-align:left}
+.inactividad-box button[type=submit]{width:100%;margin-top:14px;border:0;background:var(--accent);color:#fff;padding:11px;border-radius:9px;font-weight:700;cursor:pointer}
+.inactividad-box button[type=submit]:disabled{opacity:.6;cursor:default}
+.inactividad-logout{margin-top:14px;border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline}
+.inactividad-logout:hover{color:var(--ink)}
+.checklist{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-top:6px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.checklist label{display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;margin:0;color:var(--ink)}
+.checklist label input[type=checkbox]{width:auto;margin:0}
+.checklist .sinresultados{color:var(--muted);font-size:12px;padding:4px 0}
+.companiarow{display:grid;grid-template-columns:1fr 110px 34px;gap:8px;margin-bottom:8px;align-items:center}
+.btn-primary{border:0;background:var(--accent);color:#fff;padding:10px 16px;border-radius:9px;font-weight:700;cursor:pointer}
+.btn-primary:disabled{opacity:.6;cursor:default}
+.btn-secondary{border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 16px;border-radius:9px;font-weight:650;cursor:pointer}
+.btn-secondary:hover{background:#F0EDE6}
+.btn-danger{border:1px solid var(--danger);background:#fff;color:var(--danger);padding:10px 16px;border-radius:9px;font-weight:650;cursor:pointer}
+.btn-danger:hover{background:#F8ECE8}
+.btn-add{border:1px dashed var(--line);background:#fff;color:var(--accent);padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:650}
+.btn-del{border:0;background:#F8ECE8;color:var(--danger);border-radius:7px;width:34px;height:34px;cursor:pointer;font-weight:700}
+.btn-del:hover{background:#F0D8CF}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.formerr{background:#F8ECE8;color:var(--danger);border:1px solid #F0D8CF;border-radius:8px;padding:9px 11px;font-size:12px;margin-top:14px}
+.formok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:8px;padding:9px 11px;font-size:12px;margin-top:14px}
+.btn-edit{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:650}
+.btn-edit:hover{background:#F0EDE6}
+/* Celdas de texto largo (mensajes de reportes): son las unicas que envuelven en vez de
+   cortar en una linea, y en el celular necesitan un ancho minimo o quedan de dos palabras. */
+.table td.celda-texto{white-space:normal;max-width:380px}
+.table td.celda-texto-corta{max-width:220px}
+
+/* Choque de edición: los dos valores para el mismo campo, para que la persona elija.
+   Vive adentro de un .formerr, por eso hereda su color y solo define la estructura. */
+.choque-campo{margin:10px 0 0;padding:8px 10px;background:#fff;border:1px solid #F0D8CF;border-radius:6px}
+.choque-campo>b{display:block;margin-bottom:5px;color:var(--text)}
+.choque-campo label{display:flex;align-items:flex-start;gap:7px;margin:3px 0;color:var(--text);font-weight:400;cursor:pointer;line-height:1.4}
+.choque-campo input[type=radio]{margin:2px 0 0;flex:none}
+.choque-nota{margin-top:9px;font-size:11px;opacity:.85}
+
+/* Cartel de antigüedad de los datos + botón para volver a traerlos. */
+.actualizar{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.actualizar span{font-size:11px;color:var(--muted)}
+.actualizar button{padding:7px 12px;font-size:12px}
+@media(max-width:760px){.actualizar{width:100%;justify-content:space-between}}

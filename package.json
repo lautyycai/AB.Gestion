@@ -1,0 +1,9 @@
+{
+  "name": "ab-gestion",
+  "private": true,
+  "description": "CRM interno de Grupo Alonso+Bernardi. La app corre sin build step: este archivo existe solo para los tests.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node tests/check-sintaxis.js"
+  }
+}

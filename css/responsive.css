@@ -1,0 +1,90 @@
+/* Piezas que solo existen en pantallas chicas: la barra de arriba con el boton de menu y el fondo
+   oscuro que se pone detras del cajon lateral. En escritorio no se dibujan. */
+.mobilebar{display:none}
+.side-backdrop{display:none}
+
+/* Tablet / pantalla angosta: las grillas de varias columnas se apilan antes que el layout. */
+@media(max-width:1050px){
+.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+.two,.three{grid-template-columns:1fr}
+.profile{grid-template-columns:1fr 1fr}
+}
+
+/* Celular. La barra lateral pasa a ser un cajon que se abre con el boton de arriba: antes se
+   encogia a 70px y se le escondia el cuadro de usuario, con lo cual en el telefono no habia
+   forma de cerrar sesion ni de saber con que usuario estabas adentro. */
+@media(max-width:760px){
+/* Nada puede desbordar de costado. Si algo se pasa un pixel, iOS deja arrastrar toda la pagina y
+   al soltarla rebota dejando bandas blancas en las esquinas (la barra de arriba, que es fija, se
+   queda quieta mientras el resto se corre). Cortamos el eje horizontal de raiz. */
+html,body{overflow-x:hidden}
+
+.mobilebar{display:flex;position:fixed;top:0;left:0;right:0;height:56px;z-index:60;align-items:center;gap:8px;padding:0 10px;background:var(--azul-marca);color:#fff;box-shadow:0 2px 10px rgba(27,58,92,.18)}
+.mobilebar-menu{display:flex;align-items:center;justify-content:center;width:40px;height:40px;flex:none;padding:0;border:0;border-radius:9px;background:transparent;color:#fff;cursor:pointer}
+.mobilebar-menu svg{width:22px;height:22px}
+.mobilebar-titulo{font-weight:700;font-size:14px;letter-spacing:.04em}
+
+/* El cajon scrollea solo: con rol admin son ocho items mas el cuadro de usuario, y en la pantalla
+   de un telefono (con la barra del navegador comiendo altura) "Cerrar sesion" quedaba abajo de
+   todo sin forma de llegar. `overscroll-behavior` evita que al llegar al final el gesto siga de
+   largo y termine moviendo la pagina de atras. */
+.side{transform:translateX(-100%);transition:transform .22s ease;z-index:80;box-shadow:0 0 40px rgba(15,23,42,.4);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+.side.abierta{transform:none}
+.side .nav{flex:none}
+.side-backdrop{display:block;position:fixed;inset:0;z-index:70;background:rgba(15,23,42,.5);opacity:0;pointer-events:none;transition:opacity .2s}
+.side-backdrop.abierta{opacity:1;pointer-events:auto}
+body.menu-abierto{overflow:hidden}
+
+.main{margin-left:0;width:100%;padding:72px 14px 28px}
+.top{gap:10px;margin-bottom:16px}
+.top h1{font-size:22px}
+.top>div{min-width:0}
+
+/* Los filtros van uno por renglon y a todo el ancho. Safari en iOS no achica un <select> por
+   debajo del ancho de su opcion mas larga (Chrome si, recortando el texto adentro), asi que dos
+   desplegables al lado se pasaban de la pantalla y arrastraban toda la pagina con ellos. */
+.filters{width:100%;flex-direction:column;align-items:stretch}
+.filters>*{width:100%;max-width:100%;min-width:0;flex:none}
+input,select,textarea,.select,.search{max-width:100%}
+
+.card{padding:14px}
+.kpis{gap:12px}
+.kpi .num{font-size:25px}
+.profile{grid-template-columns:1fr}
+.formgrid{grid-template-columns:1fr}
+
+/* Un control con letra de menos de 16px hace que iOS acerque la pantalla al tocarlo, y despues la
+   deja acercada: el usuario termina navegando la app en zoom sin haberlo pedido. */
+input,select,textarea,.select,.th-select{font-size:16px}
+.th-select{max-width:150px}
+
+/* Tablas: el scroll horizontal queda adentro del recuadro (lo permite el `min-width:0` del `.main`,
+   en app.css). Sin alto maximo, asi el dedo no se topa con un scroll vertical anidado adentro de
+   la pagina; `overscroll-behavior-x` evita que al llegar al borde de la tabla el gesto se contagie
+   y mueva la pagina entera. */
+.tablewrap{max-height:none;overscroll-behavior-x:contain}
+.table th,.table td{padding:9px 8px}
+.table td.celda-texto{min-width:210px;max-width:none}
+.table td.celda-texto-corta{min-width:160px}
+.pagbar{flex-wrap:wrap;justify-content:center!important}
+
+/* Rankings: el nombre se corta con puntos suspensivos en vez de empujar la barra fuera de la fila,
+   y la columna del numero crece sola (con totales de cinco cifras un ancho fijo se desbordaba). */
+.barrow{grid-template-columns:minmax(0,100px) 1fr auto;gap:8px}
+.barrow>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.modal-overlay{padding:12px}
+.modal-box{padding:20px 16px;max-height:92vh}
+/* Apilados y a todo el ancho: uno al lado del otro, "Guardar cambios" caia en dos renglones. */
+.modal-actions{flex-direction:column}
+.modal-actions>button{width:100%}
+.companiarow{grid-template-columns:1fr 84px 34px}
+.auditoria-campo{flex-direction:column;gap:2px}
+.auditoria-campo span{text-align:left}
+.auditoria-campo b{flex:1 1 auto}
+
+#toast-root{left:12px;right:12px;bottom:12px;max-width:none}
+
+.loginwrap{padding:16px}
+.loginbox{width:100%;max-width:340px;padding:24px 20px}
+}

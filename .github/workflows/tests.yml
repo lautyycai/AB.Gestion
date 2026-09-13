@@ -1,0 +1,34 @@
+# Corre los tests y el chequeo de sintaxis en cada push.
+#
+# Por qué existe: en este proyecto se pushea directo a main, sin PRs, y hay más
+# de una conversación de IA trabajando en paralelo sin verse entre sí. Esto es
+# lo único que se entera si alguien rompe las reglas de permisos sin saberlo.
+#
+# No hace falta `npm install`: el proyecto no tiene dependencias, los tests usan
+# el runner que viene incluido en Node.
+
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verificar:
+    name: Sintaxis y permisos
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Bajar el repositorio
+        uses: actions/checkout@v5
+
+      - name: Instalar Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Chequear la sintaxis de todo el JS
+        run: npm run check
+
+      - name: Correr los tests de permisos
+        run: npm test

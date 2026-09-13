@@ -1,0 +1,59 @@
+:root{--verde-marca:#1B8763;--azul-marca:#1B3A5C;--azul-medio:#2D6CA6;--terracota:#C1613F;--bg:#F7F5F1;--card:#FFFFFF;--ink:#1C2B2A;--muted:#6B7770;--line:#E4E1DA;--accent:#1B8763;--accent2:#1B3A5C;--danger:#C1613F;--shadow:0 4px 14px rgba(27,58,92,.06)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink);background:var(--bg)}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+button,input,select{font:inherit}
+.app{display:flex;min-height:100vh}
+.side{width:245px;background:var(--azul-marca);color:#fff;padding:22px 14px;position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column}
+.brand-wrap{display:flex;align-items:center;gap:10px;padding:10px 12px 22px;cursor:pointer}
+.brand-logo-sm{width:44px;height:44px;flex:none;background-image:url('../logo-transparente.png');background-repeat:no-repeat;background-position:-5px -8px;background-size:92px 55px}
+.brand-gestion{font-weight:700;font-size:15px;letter-spacing:.04em;color:#fff}
+.brand-grupo{font-weight:700;font-size:14px;color:#fff;margin-top:1px}
+.brand-empresa{font-weight:400;font-size:12px;color:#A0BDD7;line-height:1.2}
+.brand-slogan{display:block;font-size:12px;color:#6d7d92;margin-top:5px;font-weight:400;letter-spacing:.02em;font-style:italic}
+.nav{flex:1}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;border-left:3px solid transparent;background:transparent;color:#cbd5e1;padding:12px 14px 12px 11px;border-radius:9px;margin:5px 0;cursor:pointer}
+.nav button svg{flex:none;width:17px;height:17px}
+.nav button:hover{background:#3D5874;color:#fff}
+.nav button.active{background:#3D5874;color:#fff;border-left-color:var(--verde-marca)}
+.userbox{border-top:1px solid #3D5874;padding:14px 12px;font-size:12px;color:#98a2b3}
+.userbox b{display:block;color:#fff;font-size:13px;margin-bottom:2px}
+.userbox .rolpill{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:999px;background:#3D5874;color:#A0BDD7;font-size:10px;font-weight:700;letter-spacing:.02em}
+.logout{margin-top:10px;width:100%;border:1px solid #3D5874;background:transparent;color:#cbd5e1;border-radius:8px;padding:7px;cursor:pointer;font-size:12px}
+.logout svg{width:15px;height:15px;flex:none}
+.logout:hover{background:#3D5874;color:#fff}
+.main{margin-left:245px;padding:28px;width:calc(100% - 245px);min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.top h1{margin:0;font-size:28px}
+.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.filters{display:flex;gap:10px;flex-wrap:wrap}
+.select,input{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 11px;color:var(--ink)}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card.kpi{background:rgba(27,135,99,.04);box-shadow:var(--shadow)}
+.kpi .label{font-size:12px;color:var(--muted)}
+.kpi .num{font-family:'Fraunces',Georgia,serif;font-size:30px;font-weight:700;margin-top:7px}
+.two{grid-template-columns:1.35fr 1fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.card h3{margin:0 0 14px;font-size:15px}
+.section{margin-top:18px}
+.notice{font-size:12px;color:var(--muted)}
+.card h3{display:flex;align-items:center;gap:8px}
+/* login screen */
+.loginwrap{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.loginwrap::before{content:'';position:absolute;inset:0;z-index:0;background:linear-gradient(rgba(30,34,44,.65),rgba(30,34,44,.65)),url('../oficina.jpg') 25% center/cover no-repeat;transform:scale(1.25)}
+.loginbox{position:relative;z-index:1;width:340px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:30px}
+.loginbox h1{margin:0 0 4px;font-size:20px}
+.loginbox p{margin:0 0 22px;color:var(--muted);font-size:13px}
+.loginbox label{display:block;font-size:12px;font-weight:650;margin:14px 0 6px}
+.loginbox input{width:100%}
+.loginbox button{width:100%;margin-top:20px;border:0;background:var(--accent);color:#fff;padding:11px;border-radius:9px;font-weight:700;cursor:pointer}
+.loginbox button:disabled{opacity:.6;cursor:default}
+.loginerr{margin-top:14px;background:#F8ECE8;color:var(--danger);border:1px solid #F0D8CF;border-radius:8px;padding:9px 11px;font-size:12px}
+.loading{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.loading img{width:170px;animation:pulse-logo 1.3s ease-in-out infinite}
+@keyframes pulse-logo{0%,100%{opacity:.4;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
+.pageerr{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.pageerr .formerr{max-width:360px;text-align:center;margin-top:0}
