@@ -1,13 +1,18 @@
 -- ============================================================================
 -- AB Gestión — esquema completo y modelo de seguridad (documento de referencia)
--- Fecha: 2026-09-13, actualizado más tarde el mismo día para seguir reflejando
--- el estado real: eliminar_produccion/eliminar_producciones_pas deciden por
--- productores.ejecutivo (join), no por la columna copiada en producciones;
--- crear_produccion_completa ignora el ejecutivo que manda el navegador y lo
--- toma de productores; tiene_dupla() es security definer; no hay policy de
--- insert directo en catalogos (la creación de una dupla pasa solo por
--- crear_dupla_propia); y se agregaron fn_metas_autor y fn_bloquear_ultimo_admin
--- (esta última cubre también DELETE, no solo UPDATE).
+-- Fecha: 2026-09-13, actualizado más tarde el mismo día y al siguiente para
+-- seguir reflejando el estado real: eliminar_produccion/eliminar_producciones_pas
+-- deciden por productores.ejecutivo (join), no por la columna copiada en
+-- producciones; crear_produccion_completa ignora el ejecutivo que manda el
+-- navegador y lo toma de productores; tiene_dupla() es security definer; no
+-- hay policy de insert directo en catalogos (la creación de una dupla pasa
+-- solo por crear_dupla_propia); se agregaron fn_metas_autor y
+-- fn_bloquear_ultimo_admin (esta última cubre también DELETE, no solo
+-- UPDATE); y (2026-09-14) `authenticated` queda sin TRUNCATE/REFERENCES/
+-- TRIGGER en ninguna tabla -- un proyecto nuevo de Supabase se los da por
+-- default y este documento no lo revocaba, así que reconstruir el esquema
+-- desde acá dejaba a cualquier usuario logueado con TRUNCATE sobre las 8
+-- tablas (no pasa por RLS).
 --
 -- QUÉ ES: la definición completa de las 8 tablas, las funciones de permisos,
 -- los disparadores (triggers), las políticas de RLS (Row Level Security) y
@@ -738,6 +743,15 @@ alter default privileges in schema public revoke execute on functions from publi
 alter default privileges in schema public revoke execute on functions from anon;
 revoke execute on all functions in schema public from public, anon;
 revoke all on all tables in schema public from public, anon;
+
+-- Un proyecto nuevo de Supabase le da a `authenticated` privilegios COMPLETOS
+-- sobre cualquier tabla que se cree (igual que le pasaba a `anon` antes de
+-- revocárselo arriba) -- el GRANT de abajo agrega los 4 que hacen falta, pero
+-- no saca los que sobran por default. Encontrado el 2026-09-14 en una
+-- auditoría completa: sin este REVOKE, `authenticated` conservaba TRUNCATE
+-- (no pasa por RLS), REFERENCES y TRIGGER en las 8 tablas.
+revoke truncate, references, trigger on all tables in schema public from authenticated;
+alter default privileges in schema public revoke truncate, references, trigger on tables from authenticated;
 
 grant select, insert, update, delete on
   public.productores, public.producciones, public.produccion_companias,
