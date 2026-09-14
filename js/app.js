@@ -62,12 +62,19 @@ function renderShell() {
     document.body.classList.toggle('menu-abierto', abierta);
   };
   backdropEl.onclick = cerrarMenu;
-  document.onkeydown = e => { if (e.key === 'Escape') cerrarMenu(); };
 
   // Cerrar el modal solo si el click empezó Y terminó en el fondo (overlay), nunca si arrancó
   // adentro del modal — así seleccionar texto con el mouse y soltar afuera no lo cierra por error.
   let modalMouseDownEnOverlay = false;
   const modalOverlayEl = document.getElementById('modal-overlay');
+  document.onkeydown = e => {
+    if (e.key !== 'Escape') return;
+    // Si hay un modal abierto, Escape lo cierra a él primero; recién si no hay ninguno cierra el
+    // cajón lateral. Antes Escape solo conocía el cajón: un modal abierto no se cerraba con nada
+    // más que el botón o un click en el fondo.
+    if (modalOverlayEl.style.display === 'flex') cerrarModal();
+    else cerrarMenu();
+  };
   modalOverlayEl.onmousedown = e => { modalMouseDownEnOverlay = (e.target === modalOverlayEl); };
   modalOverlayEl.onclick = e => { if (modalMouseDownEnOverlay && e.target === modalOverlayEl) cerrarModal(); };
   document.getElementById('btn-logout').onclick = () => cerrarSesion();
@@ -76,6 +83,7 @@ function renderShell() {
     cerrarMenu();
     state.view = b.dataset.view;
     state.pas = null;
+    if (b.dataset.view === 'productores') state.pagina = 1;
     if (b.dataset.view === 'reportes') reportesCache = null;
     if (b.dataset.view === 'mis-reportes') misReportesCache = null;
     if (b.dataset.view === 'usuarios') usuariosCache = null;
@@ -87,15 +95,16 @@ function renderShell() {
   render();
 }
 
-// Compartido entre el botón de la barra lateral y el de la pantalla de bloqueo por inactividad.
-async function cerrarSesion() {
+// Compartido entre el botón de la barra lateral y el cierre automático por inactividad
+// (js/inactividad.js), que le pasa un mensaje para mostrar en la pantalla de login.
+async function cerrarSesion(mensaje) {
   detenerVigilanciaInactividad();
   desuscribirRealtime();
   // Limpiamos perfil ANTES del signOut: el listener de onAuthStateChange usa perfil para saber
   // si el SIGNED_OUT fue una sesión vencida o este logout a propósito, y no pisar el mensaje.
   D = null; perfil = null;
   await supa.auth.signOut();
-  renderLogin();
+  renderLogin(mensaje);
 }
 
 /* ============== REPORTAR (comentarios / bugs de cualquier usuario) ============== */

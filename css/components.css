@@ -51,17 +51,6 @@
 .pass-toggle{position:absolute !important;right:4px;top:50% !important;transform:translateY(-50%) !important;width:28px !important;height:28px;border:0 !important;background:none !important;color:var(--muted) !important;cursor:pointer;display:flex !important;align-items:center;justify-content:center;border-radius:6px;padding:0 !important;margin:0 !important;font-weight:400}
 .pass-toggle:hover{background:#F0EDE6 !important;color:var(--ink) !important}
 .pass-toggle svg{width:17px;height:17px}
-/* bloqueo por inactividad: el fondo se difumina pero no se borra ni se toca */
-#root.difuminado{filter:blur(8px) saturate(.9);transition:filter .2s ease}
-.inactividad-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:400;padding:20px}
-.inactividad-box{position:relative;width:340px;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,.3);padding:28px;text-align:center}
-.inactividad-box h2{margin:0 0 8px;font-size:19px}
-.inactividad-box p{margin:0 0 18px;color:var(--muted);font-size:13px;text-align:left}
-.inactividad-box form{text-align:left}
-.inactividad-box button[type=submit]{width:100%;margin-top:14px;border:0;background:var(--accent);color:#fff;padding:11px;border-radius:9px;font-weight:700;cursor:pointer}
-.inactividad-box button[type=submit]:disabled{opacity:.6;cursor:default}
-.inactividad-logout{margin-top:14px;border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline}
-.inactividad-logout:hover{color:var(--ink)}
 .checklist{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-top:6px;display:flex;flex-direction:column;gap:6px;background:#fff}
 .checklist label{display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;margin:0;color:var(--ink)}
 .checklist label input[type=checkbox]{width:auto;margin:0}

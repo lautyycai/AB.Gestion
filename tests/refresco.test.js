@@ -53,7 +53,7 @@ function preparar({ supa, MODO_DEMO = false }) {
   const valores = [document, supa, MODO_DEMO, consola];
   const fabrica = new Function(...nombres, `${SRC}
     return {
-      mapearProductor, mapearProduccion, agruparCompanias,
+      mapearProductor, mapearProduccion, agruparCompanias, columnasDesdeProductor,
       refrescarProductor, refrescarProduccion, refrescarCargasDelPas,
       ponerD: v => { D = v; }, verD: () => D,
     };`);
@@ -72,6 +72,28 @@ const filaProduccion = (extra = {}) => Object.assign({
   id: 1, pas_id: 9, version: 4, ramo: 'AUTOS', trimestre: '1T2026',
   ejecutivo: 'DUPLA_A', organizador: '', total_polizas: 10, ultima_fecha: '2026-09-01',
 }, extra);
+
+// El comentario de mapearProductor/columnasDesdeProductor en js/state.js dice "si tocás uno de los
+// dos mapeos, tocá el otro: hay un test que los compara" — hasta ahora no lo había (columnasDesde-
+// Productor solo se usaba de plomería en tests/concurrencia.test.js, ningún assert los comparaba).
+// Sin esto, un campo que se agregue a uno de los dos mapeos y se olvide en el otro no se nota:
+// camposCambiados() (js/services/productores.js) compara las claves de leerFormPAS() contra las de
+// columnasDesdeProductor(fresco), así que ese campo nunca entraría a "suyos" y la detección de
+// choque de la fusión de ediciones dejaría pisar el cambio del otro sin avisar.
+describe('mapearProductor / columnasDesdeProductor: mapeos espejados', () => {
+
+  test('columnasDesdeProductor(mapearProductor(fila)) reconstruye la fila original, campo a campo', () => {
+    const api = preparar({ supa: supaFalso(() => ({ data: null, error: null })) });
+    const fila = filaProductor();
+    const idaYVuelta = api.columnasDesdeProductor(api.mapearProductor(fila));
+
+    // cantidad_polizas_vigentes no es parte de columnasDesdeProductor a propósito: no es un campo
+    // del formulario, se calcula aparte. id/version tampoco: no son columnas de "datos del PAS".
+    const { id, version, cantidad_polizas_vigentes, ...columnasEditables } = fila;
+    assert.deepStrictEqual(idaYVuelta, columnasEditables);
+  });
+
+});
 
 describe('refrescarProductor', () => {
 

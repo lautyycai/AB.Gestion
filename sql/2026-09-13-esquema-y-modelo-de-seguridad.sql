@@ -1,6 +1,13 @@
 -- ============================================================================
 -- AB Gestión — esquema completo y modelo de seguridad (documento de referencia)
--- Fecha: 2026-09-13
+-- Fecha: 2026-09-13, actualizado más tarde el mismo día para seguir reflejando
+-- el estado real: eliminar_produccion/eliminar_producciones_pas deciden por
+-- productores.ejecutivo (join), no por la columna copiada en producciones;
+-- crear_produccion_completa ignora el ejecutivo que manda el navegador y lo
+-- toma de productores; tiene_dupla() es security definer; no hay policy de
+-- insert directo en catalogos (la creación de una dupla pasa solo por
+-- crear_dupla_propia); y se agregaron fn_metas_autor y fn_bloquear_ultimo_admin
+-- (esta última cubre también DELETE, no solo UPDATE).
 --
 -- QUÉ ES: la definición completa de las 8 tablas, las funciones de permisos,
 -- los disparadores (triggers), las políticas de RLS (Row Level Security) y
@@ -146,7 +153,7 @@ as $function$ select dupla_asignada from public.usuarios where id = auth.uid() $
 create or replace function public.tiene_dupla(p_ejecutivo text)
  returns boolean
  language sql
- stable
+ stable security definer
  set search_path to 'public'
 as $function$
   select p_ejecutivo = any(coalesce((select dupla_asignada from usuarios where id = auth.uid()), '{}'::text[]))
@@ -256,6 +263,50 @@ begin
 end;
 $function$;
 
+-- Mismo patrón que fn_reportes_autor, para metas.creado_por: lo completa un
+-- trigger a partir de la sesión, no lo que mande el navegador.
+create or replace function public.fn_metas_autor()
+ returns trigger
+ language plpgsql
+ security definer
+ set search_path to 'pg_catalog'
+as $function$
+begin
+  if tg_op = 'INSERT' then
+    new.creado_por := auth.uid();
+  elsif tg_op = 'UPDATE' then
+    new.creado_por := old.creado_por;
+  end if;
+  return new;
+end;
+$function$;
+
+-- Nadie puede dejar el sistema sin ningún admin: ni cambiándole el rol al
+-- único admin, ni borrando esa fila directo (la policy usuarios_admin_todo
+-- ... FOR ALL lo permitiría desde la consola del navegador sin esto).
+create or replace function public.fn_bloquear_ultimo_admin()
+ returns trigger
+ language plpgsql
+ security definer
+ set search_path to 'public'
+as $function$
+begin
+  if tg_op = 'DELETE' then
+    if old.rol = 'admin' and (select count(*) from usuarios where rol = 'admin' and id <> old.id) = 0 then
+      raise exception 'No podés borrar al único admin del sistema. Asigná el rol de admin a otro usuario antes de borrar este.';
+    end if;
+    return old;
+  end if;
+
+  if old.rol = 'admin' and new.rol is distinct from 'admin' then
+    if (select count(*) from usuarios where rol = 'admin' and id <> old.id) = 0 then
+      raise exception 'No podés dejar el sistema sin ningún admin. Asigná el rol de admin a otro usuario antes de cambiar este.';
+    end if;
+  end if;
+  return new;
+end;
+$function$;
+
 -- Event trigger: activa RLS automáticamente en cualquier tabla nueva del
 -- esquema public, como red de seguridad ante el olvido.
 create or replace function public.rls_auto_enable()
@@ -288,6 +339,10 @@ BEGIN
 END;
 $function$;
 
+-- p_ejecutivo queda en la firma por compatibilidad con el llamado desde el frontend (PostgREST
+-- llama por nombre de parámetro), pero el valor que manda el navegador YA NO SE USA: se lee de
+-- productores.ejecutivo, la fuente de verdad, para que nunca pueda divergir de a qué PAS pertenece
+-- la carga (sin esto, quien carga producción podía atribuirle una carga propia a otra dupla).
 create or replace function public.crear_produccion_completa(p_pas_id bigint, p_ramo text, p_trimestre text, p_ejecutivo text, p_organizador text, p_fecha date, p_total integer, p_detalle jsonb)
  returns bigint
  language plpgsql
@@ -298,9 +353,14 @@ declare
 begin
   insert into public.producciones
     (pas_id, ramo, trimestre, ejecutivo, organizador, ultima_fecha, total_polizas)
-  values
-    (p_pas_id, p_ramo, p_trimestre, p_ejecutivo, p_organizador, p_fecha, p_total)
+  select p_pas_id, p_ramo, p_trimestre, p.ejecutivo, p_organizador, p_fecha, p_total
+    from public.productores p
+   where p.id = p_pas_id
   returning id into v_id;
+
+  if v_id is null then
+    raise exception 'No se encontró el PAS, o no tenés permiso para cargarle producción.';
+  end if;
 
   insert into public.produccion_companias (produccion_id, compania, cantidad)
   select v_id, d->>'compania', (d->>'cantidad')::int
@@ -377,6 +437,9 @@ begin
 end;
 $function$;
 
+-- Deciden por el ejecutivo ACTUAL del PAS (join a productores), no por producciones.ejecutivo --
+-- esa columna se copia una sola vez al crear la carga y no se actualiza si el PAS cambia de dupla,
+-- así que confiar en ella podía dejar una carga borrable por la dupla equivocada.
 create or replace function public.eliminar_produccion(p_produccion_id bigint)
  returns void
  language plpgsql
@@ -387,7 +450,10 @@ declare
   v_ejecutivo text;
   v_rol text;
 begin
-  select ejecutivo into v_ejecutivo from producciones where id = p_produccion_id;
+  select p.ejecutivo into v_ejecutivo
+    from producciones pr join productores p on p.id = pr.pas_id
+   where pr.id = p_produccion_id;
+
   if v_ejecutivo is null then
     raise exception 'La carga no existe.';
   end if;
@@ -418,21 +484,19 @@ begin
   select rol into v_rol from usuarios where id = auth.uid();
 
   if v_rol = 'admin' then
-    delete from produccion_companias
-      where produccion_id in (select id from producciones where pas_id = p_pas_id);
-    delete from producciones where pas_id = p_pas_id;
-    get diagnostics v_borradas = row_count;
+    -- ok, sin restricción de dupla
   elsif v_rol = 'editor' then
-    delete from produccion_companias
-      where produccion_id in (
-        select id from producciones
-        where pas_id = p_pas_id and public.tiene_dupla(ejecutivo)
-      );
-    delete from producciones where pas_id = p_pas_id and public.tiene_dupla(ejecutivo);
-    get diagnostics v_borradas = row_count;
+    if not exists (select 1 from productores p where p.id = p_pas_id and public.tiene_dupla(p.ejecutivo)) then
+      raise exception 'No tenés permiso para eliminar cargas de este PAS.';
+    end if;
   else
     raise exception 'No tenés permiso para eliminar cargas.';
   end if;
+
+  delete from produccion_companias
+    where produccion_id in (select id from producciones where pas_id = p_pas_id);
+  delete from producciones where pas_id = p_pas_id;
+  get diagnostics v_borradas = row_count;
 
   return v_borradas;
 end;
@@ -599,8 +663,10 @@ create policy catalogos_select_todos on public.catalogos for select to authentic
   using (exists (select 1 from usuarios u where u.id = auth.uid()));
 create policy catalogos_admin_edita on public.catalogos for all to authenticated
   using (mi_rol() = 'admin') with check (mi_rol() = 'admin');
-create policy editor_inserta_dupla_catalogo on public.catalogos for insert to authenticated
-  with check (mi_rol() = 'editor' and tipo = 'ejecutivo');
+-- No hay policy de insert para editor: la creación de una dupla pasa solo por crear_dupla_propia,
+-- que es security definer y no necesita esta policy. Una policy de insert directo por PostgREST
+-- dejaría saltear la normalización de esa función (upper/trim, límite de 40, chequeo
+-- case-insensitive) y no tendría policy de DELETE para limpiar lo que ensuciara.
 
 -- usuarios (dos generaciones de policies conviviendo: se combinan con OR,
 -- funcionan, pero están anotadas como pendiente de consolidar)
@@ -655,6 +721,8 @@ create trigger trg_audit_usuarios after insert or delete or update on public.usu
 create trigger trg_audit_catalogos after insert or delete or update on public.catalogos for each row execute function fn_audit_log();
 create trigger trg_audit_metas after insert or delete or update on public.metas for each row execute function fn_audit_log();
 create trigger trg_audit_reportes after insert or delete or update on public.reportes for each row execute function fn_audit_log();
+create trigger trg_metas_autor before insert or update on public.metas for each row execute function fn_metas_autor();
+create trigger trg_bloquear_ultimo_admin before update or delete on public.usuarios for each row execute function fn_bloquear_ultimo_admin();
 
 -- Event trigger que activa RLS automáticamente en cualquier tabla nueva
 drop event trigger if exists ensure_rls;
@@ -702,6 +770,8 @@ revoke execute on function public.fn_audit_log() from public, anon, authenticate
 revoke execute on function public.fn_bump_version() from authenticated;
 revoke execute on function public.fn_recalcular_total_produccion() from authenticated;
 revoke execute on function public.fn_reportes_autor() from authenticated;
+revoke execute on function public.fn_metas_autor() from authenticated;
+revoke execute on function public.fn_bloquear_ultimo_admin() from authenticated;
 revoke execute on function public.rls_auto_enable() from authenticated;
 
 -- Realtime: publicado solo para metas y reportes, que son las únicas dos

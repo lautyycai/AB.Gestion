@@ -6,7 +6,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const RAIZ = path.join(__dirname, '..');
-const IGNORAR = new Set(['.git', 'node_modules', 'tests', '.claude']);
+// tests/ SÍ se recorre: antes quedaba afuera y los propios archivos de test nunca
+// pasaban por node --check (en la práctica casi no importaba, porque node --test ya
+// falla si un test tiene un error de sintaxis -- pero esto lo detecta más rápido y
+// sin tener que correr toda la batería).
+const IGNORAR = new Set(['.git', 'node_modules', '.claude']);
 
 function archivosJs(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

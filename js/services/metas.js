@@ -1,9 +1,10 @@
 /* ============== SERVICIO: METAS (objetivo de pólizas por dupla/trimestre) ============== */
+// creado_por lo completa solo un trigger a partir de la sesión (fn_metas_autor, mismo patrón que
+// el autor de reportes); no hace falta mandarlo.
 async function guardarMeta({ dupla, trimestre, objetivo_polizas }) {
   const bloqueo = demoBloqueo(); if (bloqueo) return bloqueo;
-  const { data: { user } } = await supa.auth.getUser();
   return supa.from('metas').upsert(
-    { dupla, trimestre, objetivo_polizas, creado_por: user ? user.id : null },
+    { dupla, trimestre, objetivo_polizas },
     { onConflict: 'dupla,trimestre' }
   );
 }

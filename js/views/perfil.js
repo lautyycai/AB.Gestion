@@ -39,7 +39,10 @@ function vistaPerfil() {
 
 function renderVistaPerfil() {
   const puedeVerOtros = perfil.rol === 'admin' || perfil.rol === 'jefe';
-  const tieneDupla = perfil.rol === 'editor' || perfil.rol === 'carga_pas';
+  // Nombre distinto a propósito: hay una función global tieneDupla(dupla) en permissions.js;
+  // llamarla igual acá la tapa dentro de esta función sin romper nada hoy, pero rompería en
+  // silencio (is not a function) el día que alguien la necesite adentro de renderVistaPerfil().
+  const esRolConDupla = perfil.rol === 'editor' || perfil.rol === 'carga_pas';
 
   let duplaObjetivo = null;
   let nombreObjetivo = perfil.nombre_completo || '';
@@ -56,7 +59,7 @@ function renderVistaPerfil() {
     duplaObjetivo = elegido ? elegido.dupla_asignada : null;
     nombreObjetivo = elegido ? elegido.nombre_completo : '';
     selectorHtml = `<div class="card section"><div class="formgrid"><div class="full"><label>Ver perfil de</label><select id="perfil-selector">${opciones.map(o => `<option value="${esc(o._key)}" ${o._key === state.perfilObjetivoId ? 'selected' : ''}>${esc(o.nombre_completo)} (${esc(o.dupla_asignada)})</option>`).join('') || '<option>No hay usuarios con dupla asignada</option>'}</select></div></div></div>`;
-  } else if (tieneDupla) {
+  } else if (esRolConDupla) {
     const misDuplas = perfil.dupla_asignada || [];
     if (!state.miDuplaSel || !misDuplas.includes(state.miDuplaSel)) state.miDuplaSel = misDuplas[0] || null;
     duplaObjetivo = state.miDuplaSel;

@@ -96,8 +96,11 @@ function actualizarLocalidadesPorZona(zona) {
 const FILAS_POR_PAGINA = 50;
 
 function productores() {
-  // Esto se dibuja UNA sola vez al entrar a la vista (el buscador no se vuelve a crear en cada letra)
-  state.pagina = 1;
+  // Esto se dibuja UNA sola vez al entrar a la vista (el buscador no se vuelve a crear en cada
+  // letra). El reset de state.pagina a 1 vive en el handler de navegación (app.js), no acá: esta
+  // función también se re-ejecuta en cualquier render() completo estando YA en la vista (desbloqueo
+  // por inactividad, "atrás" del navegador) — resetear la página acá adentro devolvía de la 14 a la
+  // 1 en esos casos, no solo al entrar de verdad a la vista.
   const botonNuevo = puedeCrearPas() ? `<button class="btn-primary" id="btn-nuevo-pas">+ Nuevo PAS</button>` : '';
   $('#app').innerHTML = `<div class="top"><div><h1>Productores</h1><div class="sub" id="prod-sub">Base de PAS</div></div><div class="filters" style="align-items:center"><input class="search" id="search" placeholder="Buscar PAS, organización, ejecutivo..." value="${esc(state.q)}">${botonNuevo}${barraActualizar()}</div></div><div class="card"><div id="prod-tabla"></div></div>`;
   activarBotonActualizar();
