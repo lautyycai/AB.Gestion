@@ -30,7 +30,7 @@ try {
 } catch (e) {
   // Si el navegador no deja tocar localStorage, no es motivo para romper la app.
 }
-const URL_CREAR_USUARIO = "https://openit.lautibagnato.workers.dev";
+const URL_CREAR_USUARIO = "https://worker.lautibagnato.workers.dev";
 
 // Supabase corta select('*') en 1000 filas por defecto: esto pagina hasta traer todo.
 // El .order('id') NO es cosmético: sin un orden explícito Postgres no garantiza que dos consultas
