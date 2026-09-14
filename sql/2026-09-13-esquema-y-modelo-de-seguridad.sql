@@ -12,7 +12,8 @@
 -- TRIGGER en ninguna tabla -- un proyecto nuevo de Supabase se los da por
 -- default y este documento no lo revocaba, así que reconstruir el esquema
 -- desde acá dejaba a cualquier usuario logueado con TRUNCATE sobre las 8
--- tablas (no pasa por RLS).
+-- tablas (no pasa por RLS); y (2026-09-14) reportes_insert_propio exige
+-- también que auth.uid() tenga fila en usuarios, no solo que exista sesión.
 --
 -- QUÉ ES: la definición completa de las 8 tablas, las funciones de permisos,
 -- los disparadores (triggers), las políticas de RLS (Row Level Security) y
@@ -692,7 +693,10 @@ create policy "usuario ve sus propios reportes" on public.reportes for select to
 create policy reportes_select_admin on public.reportes for select to authenticated
   using (mi_rol() = 'admin');
 create policy reportes_insert_propio on public.reportes for insert to authenticated
-  with check (usuario_id = auth.uid());
+  with check (
+    usuario_id = auth.uid()
+    and exists (select 1 from usuarios u where u.id = auth.uid())
+  );
 create policy reportes_update_admin on public.reportes for update to authenticated
   using (mi_rol() = 'admin') with check (mi_rol() = 'admin');
 create policy reportes_delete_admin on public.reportes for delete to authenticated
