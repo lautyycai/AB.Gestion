@@ -113,9 +113,8 @@ function demoHash(texto, semilla) {
 }
 
 /* Asigna un nombre inventado por cada nombre real, sin repetir: ante una
- * colisión avanza a la combinación siguiente hasta encontrar una libre. Con 968
- * productores y 1.600 combinaciones esto pasa seguido, y sin resolverlo dos
- * productores distintos aparecerían con el mismo nombre. */
+ * colisión avanza a la combinación siguiente hasta encontrar una libre, así
+ * dos productores distintos nunca aparecen con el mismo nombre inventado. */
 function crearAsignador(hacerValor) {
   const asignados = new Map();
   const usados = new Set();
@@ -211,10 +210,10 @@ function mailDemo(nombreEnmascarado) {
 function enmascararDatos(D) {
   if (!MODO_DEMO || !D) return D;
 
-  // El recorte va ANTES de enmascarar: no tiene sentido inventarle nombre a 968
-  // productores para después descartar 918. La producción se filtra a los que
-  // quedan, o los rankings y la ficha mostrarían cargas de productores que ya
-  // no están en el listado.
+  // El recorte va ANTES de enmascarar: no tiene sentido inventarle nombre a
+  // productores que se van a descartar después. La producción se filtra a
+  // los que quedan, o los rankings y la ficha mostrarían cargas de
+  // productores que ya no están en el listado.
   if (LIMITE_DEMO && Array.isArray(D.producers) && D.producers.length > LIMITE_DEMO) {
     D.producers = D.producers.slice(0, LIMITE_DEMO);
     const idsQueQuedan = new Set(D.producers.map(p => p._id));
