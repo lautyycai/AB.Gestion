@@ -30,6 +30,8 @@ const path = require('node:path');
 
 const SRC_SERVICIO = fs.readFileSync(path.join(__dirname, '..', 'js', 'services', 'productores.js'), 'utf8');
 const SRC_ESTADO = fs.readFileSync(path.join(__dirname, '..', 'js', 'state.js'), 'utf8');
+const SRC_FORMAT = fs.readFileSync(path.join(__dirname, '..', 'js', 'utils', 'format.js'), 'utf8');
+const { companiasCanonico } = new Function(`${SRC_FORMAT}\nreturn { companiasCanonico };`)();
 
 const FILA_INICIAL = {
   id: 99, version: 7, pas_nombre: 'Un Productor', organizacion: 'ORG', vinculante: '',
@@ -128,7 +130,7 @@ function preparar({ fila = FILA_INICIAL, escribe = {}, versionFoto = 7, MODO_DEM
 
   const entorno = {
     document, supa,
-    D: { producers: [], production: [] },
+    D: { producers: [], production: [], catalog: { companias: [] } },
     state: {},
     esc: s => String(s),
     cargarDatos: async () => { registro.recargas++; return { producers: [], production: [] }; },
@@ -142,6 +144,7 @@ function preparar({ fila = FILA_INICIAL, escribe = {}, versionFoto = 7, MODO_DEM
     columnasDesdeProductor: estadoApi.columnasDesdeProductor,
     camposCambiados: estadoApi.camposCambiados,
     mismoValor: estadoApi.mismoValor,
+    companiasCanonico,
   };
 
   const nombres = Object.keys(entorno);

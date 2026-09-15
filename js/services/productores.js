@@ -155,7 +155,13 @@ async function intentarGuardarPAS(idExistente, campos, version, cambiosDelOtro) 
       return { ok: false };
     }
 
-    const suyos = camposCambiados(formPasOriginal || {}, columnasDesdeProductor(fresco));
+    // columnasDesdeProductor(fresco) trae "companias_opera" tal como está guardado en la base, pero
+    // formPasOriginal lo tiene en la forma canónica que arma el checklist (orden alfabético, mayúsculas
+    // del catálogo). Sin normalizar acá, cualquier PAS cuyo texto guardado no esté ya en esa forma
+    // exacta figuraba como "el otro cambió las compañías" en cada choque, así lo haya tocado o no.
+    const columnasFresco = columnasDesdeProductor(fresco);
+    columnasFresco.companias_opera = companiasCanonico(columnasFresco.companias_opera, D.catalog.companias);
+    const suyos = camposCambiados(formPasOriginal || {}, columnasFresco);
     const pisados = Object.keys(campos).filter(k => k in suyos && !mismoValor(campos[k], suyos[k]));
 
     if (pisados.length > 0) {

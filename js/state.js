@@ -101,7 +101,7 @@ function camposCambiados(antes, despues) {
   return cambios;
 }
 
-function mapearProduccion(r, nombrePas, companias) {
+function mapearProduccion(r, nombrePas, companias, ejecutivoActual) {
   return {
     _id: r.id,
     _pas_id: r.pas_id,
@@ -110,7 +110,13 @@ function mapearProduccion(r, nombrePas, companias) {
     'PAS': nombrePas || '(desconocido)',
     'RAMO': r.ramo,
     'TRIMESTRE': r.trimestre,
-    'EJECUTIVO': r.ejecutivo,
+    // Se toma del productor ACTUAL, no de esta fila: producciones.ejecutivo es una copia hecha al
+    // crear la carga que no se actualiza si el PAS cambia de dupla -- el mismo motivo por el que
+    // crear_produccion_completa y los RPC de borrado dejaron de confiar en esta columna (ver
+    // sql/2026-09-13-corregir-ejecutivo-produccion.sql). Sin este join en vivo, las estadísticas de
+    // Perfil/Dashboard/Comparar seguían sumando el historial completo a la dupla vieja para siempre.
+    // Cae a r.ejecutivo solo si no se encontró el productor (caller no pasó el dato).
+    'EJECUTIVO': ejecutivoActual !== undefined ? (ejecutivoActual || r.ejecutivo) : r.ejecutivo,
     'ORGANIZADOR': r.organizador,
     'TOTAL': r.total_polizas,
     'FECHA': r.ultima_fecha,
@@ -144,15 +150,17 @@ async function cargarDatos() {
   }
 
   const pasIdToNombre = {};
+  const pasIdToEjecutivo = {};
   const producers = (productoresRows || []).map(r => {
     pasIdToNombre[r.id] = r.pas_nombre;
+    pasIdToEjecutivo[r.id] = r.ejecutivo;
     return mapearProductor(r);
   });
 
   const companiasPorProduccion = agruparCompanias(detalleRows);
 
   const production = (produccionesRows || []).map(r =>
-    mapearProduccion(r, pasIdToNombre[r.pas_id], companiasPorProduccion[r.id]));
+    mapearProduccion(r, pasIdToNombre[r.pas_id], companiasPorProduccion[r.id], pasIdToEjecutivo[r.pas_id]));
 
   const porTipo = t => [...new Set((catalogoRows || []).filter(c => c.tipo === t && c.activo !== false).map(c => c.valor))];
   const catalog = {
@@ -250,8 +258,8 @@ async function refrescarProduccion(id) {
     return null;
   }
 
-  const nombrePas = ((D.producers || []).find(x => String(x._id) === String(fila.pas_id)) || {}).PAS;
-  const fresca = mapearProduccion(fila, nombrePas, agruparCompanias(detalle)[fila.id]);
+  const pasActual = (D.producers || []).find(x => String(x._id) === String(fila.pas_id)) || {};
+  const fresca = mapearProduccion(fila, pasActual.PAS, agruparCompanias(detalle)[fila.id], pasActual.EJECUTIVO);
   const i = (D.production || []).findIndex(x => String(x._id) === String(id));
   if (i >= 0) D.production[i] = fresca; else D.production.push(fresca);
 
@@ -280,8 +288,8 @@ async function refrescarCargasDelPas(pasId) {
   }
 
   const porProduccion = agruparCompanias(detalle);
-  const nombrePas = ((D.producers || []).find(x => String(x._id) === String(pasId)) || {}).PAS;
-  const frescas = (filas || []).map(f => mapearProduccion(f, nombrePas, porProduccion[f.id]));
+  const pasActual = (D.producers || []).find(x => String(x._id) === String(pasId)) || {};
+  const frescas = (filas || []).map(f => mapearProduccion(f, pasActual.PAS, porProduccion[f.id], pasActual.EJECUTIVO));
 
   D.production = (D.production || []).filter(x => String(x._pas_id) !== String(pasId)).concat(frescas);
   return true;

@@ -13,7 +13,10 @@
 -- default y este documento no lo revocaba, así que reconstruir el esquema
 -- desde acá dejaba a cualquier usuario logueado con TRUNCATE sobre las 8
 -- tablas (no pasa por RLS); y (2026-09-14) reportes_insert_propio exige
--- también que auth.uid() tenga fila en usuarios, no solo que exista sesión.
+-- también que auth.uid() tenga fila en usuarios, no solo que exista sesión;
+-- y (2026-09-15) se sacó mi_dupla(): no la usaba nada, tenía el tipo de
+-- retorno mal (declaraba "text" sobre una columna text[]) y EXECUTE de más
+-- otorgado a anon.
 --
 -- QUÉ ES: la definición completa de las 8 tablas, las funciones de permisos,
 -- los disparadores (triggers), las políticas de RLS (Row Level Security) y
@@ -148,13 +151,6 @@ create or replace function public.mi_rol()
 as $function$
   select coalesce((select rol from public.usuarios where id = auth.uid()), '')
 $function$;
-
-create or replace function public.mi_dupla()
- returns text
- language sql
- stable security definer
- set search_path to 'public'
-as $function$ select dupla_asignada from public.usuarios where id = auth.uid() $function$;
 
 create or replace function public.tiene_dupla(p_ejecutivo text)
  returns boolean
@@ -766,7 +762,6 @@ to authenticated;
 -- authenticated (y anon, para que una consulta sin sesión falle limpio en vez
 -- de con "permission denied for function").
 grant execute on function public.mi_rol() to authenticated, anon;
-grant execute on function public.mi_dupla() to authenticated, anon;
 grant execute on function public.tiene_dupla(text) to authenticated, anon;
 grant execute on function public.es_admin() to authenticated, anon;
 grant execute on function public.es_jefe() to authenticated, anon;

@@ -24,9 +24,10 @@ const MENSAJE_PASSWORD_INVALIDA = 'La contraseña tiene que tener al menos 8 car
 function opts(arr, val) { return '<option value="TODOS">TODOS</option>' + arr.filter(Boolean).map(x => '<option value="' + esc(x) + '" ' + (x === val ? 'selected' : '') + '>' + esc(x) + '</option>').join('') }
 // Convierte un trimestre en un número ordenable cronológicamente (año*10 + numero de trimestre).
 // Tolera las formas en que se fue tipeando el valor en el catálogo: "T1 2026", "T1-2026",
-// "T12026", "1T 2026", "2026 T1". También la palabra completa: "1er trimestre 2026",
-// "TRIMESTRE 1 2026". Antes solo entraban las formas abreviadas: cualquier otra devolvía 0, se
-// ordenaba antes que todo y el "último trimestre cargado" quedaba mal sin avisar.
+// "T12026", "1T 2026", "2026 T1". También la palabra completa, número y año en cualquier orden:
+// "1er trimestre 2026", "TRIMESTRE 1 2026", "TRIMESTRE 2026 1". Antes solo entraban las formas
+// abreviadas: cualquier otra devolvía 0, se ordenaba antes que todo y el "último trimestre
+// cargado" quedaba mal sin avisar.
 function trimestreOrden(t) {
   const s = String(t == null ? '' : t).toUpperCase();
   let m = s.match(/T\s*[-\/]?\s*(\d)\D*(\d{4})/);
@@ -34,11 +35,16 @@ function trimestreOrden(t) {
   if (m) return parseInt(m[2], 10) * 10 + parseInt(m[1], 10);
   const invertido = s.match(/(\d{4})\D*T\s*(\d)/);
   if (invertido) return parseInt(invertido[1], 10) * 10 + parseInt(invertido[2], 10);
-  // Palabra completa, con o sin sufijo ordinal antes ("1ER TRIMESTRE 2026") o el número después
-  // ("TRIMESTRE 1 2026", "TRIMESTRE 2026 1").
+  // Palabra completa, en cualquiera de los tres órdenes en que se fue tipeando: el número antes
+  // de "TRIMESTRE" ("1ER TRIMESTRE 2026"), después ("TRIMESTRE 1 2026"), o el año antes que el
+  // número ("TRIMESTRE 2026 1") -- este último no entraba con el patrón anterior, que asumía que
+  // el primer número después de "TRIMESTRE" es siempre el número de trimestre, nunca el año.
   let p = s.match(/(\d)[A-ZÑ]*\s*TRIMESTRE\D*(\d{4})/);
-  if (!p) p = s.match(/TRIMESTRE\D*?(\d)\D*(\d{4})/);
   if (p) return parseInt(p[2], 10) * 10 + parseInt(p[1], 10);
+  p = s.match(/TRIMESTRE\D*?(\d)\D*(\d{4})/);
+  if (p) return parseInt(p[2], 10) * 10 + parseInt(p[1], 10);
+  p = s.match(/TRIMESTRE\D*?(\d{4})\D*(\d)\b/);
+  if (p) return parseInt(p[1], 10) * 10 + parseInt(p[2], 10);
   return 0;
 }
 // Mismo formato que trimestreOrden(), pero para el trimestre calendario en curso
@@ -69,7 +75,12 @@ function separarCompaniasDelTexto(texto, catalogo) {
     encontradas.add(c);
     restante = restante.replace(patron, (todo, antes, despues) => antes + ' '.repeat(nombre.length) + despues);
   });
-  const restanteLimpio = restante.replace(/\s+/g, ' ').trim().split(',').map(s => s.trim()).filter(Boolean).join(', ');
+  // Separadores sueltos: lo que separaba una compañía encontrada de una que quedó en "restante" (una
+  // coma, un guion, una barra) no era parte de ninguna de las dos, y sin este recorte por fragmento
+  // quedaba pegado al principio o al final ("SANCOR, / RIVADAVIA" en vez de "SANCOR, RIVADAVIA").
+  const restanteLimpio = restante.replace(/\s+/g, ' ').trim().split(',')
+    .map(s => s.trim().replace(/^[-\/,]+\s*/, '').replace(/\s*[-\/,]+$/, '').trim())
+    .filter(Boolean).join(', ');
   return {
     encontradas: (catalogo || []).filter(c => encontradas.has(c)),
     restante: restanteLimpio,
@@ -78,6 +89,18 @@ function separarCompaniasDelTexto(texto, catalogo) {
 
 function companiasDelTexto(texto, catalogo) {
   return separarCompaniasDelTexto(texto, catalogo).encontradas;
+}
+
+// Representación canónica de "compañías con las que opera": las del catálogo activo, en el mismo
+// orden alfabético en que las lee el checklist del formulario (leerFormPAS() las junta en ese orden,
+// via querySelectorAll sobre las casillas ya ordenadas), seguidas de lo que no matchea ninguna
+// compañía activa. Sin pasar por acá, comparar el valor crudo de la base contra lo que arma el
+// formulario reporta un cambio en este campo aunque nadie lo haya tocado -- ver camposCambiados()
+// en intentarGuardarPAS() (js/services/productores.js), que necesita los dos lados en la misma forma.
+function companiasCanonico(texto, catalogo) {
+  const { encontradas, restante } = separarCompaniasDelTexto(texto, catalogo);
+  const ordenadas = encontradas.slice().sort((a, b) => a.localeCompare(b, 'es'));
+  return [...ordenadas, ...(restante ? [restante] : [])].join(', ');
 }
 
 // Lo que queda del texto libre después de sacar las compañías del catálogo activo. El checklist de

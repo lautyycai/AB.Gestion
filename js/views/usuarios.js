@@ -144,6 +144,11 @@ function abrirModalEditarUsuario(u) {
   const duplaActual = u.dupla_asignada && u.dupla_asignada[0];
   const duplaActualInactiva = !!duplaActual && !ejecutivosOrdenados.includes(duplaActual);
   const opcionesDupla = duplaActualInactiva ? [duplaActual, ...ejecutivosOrdenados] : ejecutivosOrdenados;
+  // Si el usuario no tenía ninguna dupla (por ejemplo, era Observador y se le está por dar un rol
+  // que sí necesita una), ninguna <option> de abajo puede quedar "selected" -- sin este placeholder
+  // el navegador elegía la primera alfabética y "Guardar cambios" la escribía sin que nadie la haya
+  // tocado, con la validación de más abajo pasando de largo porque el valor no estaba vacío.
+  const necesitaPlaceholder = !duplaActual;
   const emailsDisponibles = !!(usuariosCache && usuariosCache.emailsCargados);
   const html = `
     <h2>Editar usuario</h2>
@@ -151,7 +156,7 @@ function abrirModalEditarUsuario(u) {
     <div class="formgrid">
       <div class="full"><label>Nombre completo</label><input id="eu-nombre" value="${esc(u.nombre_completo || '')}"></div>
       <div><label>Rol</label><select id="eu-rol">${ROLES_USUARIO.map(r => `<option value="${r.valor}" ${r.valor === u.rol ? 'selected' : ''}>${r.etiqueta}</option>`).join('')}</select></div>
-      <div id="eu-dupla-wrap"><label>Dupla asignada</label><select id="eu-dupla">${opcionesDupla.map(e => `<option value="${esc(e)}" ${e === duplaActual ? 'selected' : ''}>${esc(e)}${e === duplaActual && duplaActualInactiva ? ' (ya no está activa)' : ''}</option>`).join('')}</select>${duplaActualInactiva ? `<div class="notice" style="margin-top:6px">Esta dupla ya no está activa en el catálogo. Se conserva tal cual si no la cambiás.</div>` : ''}${(u.dupla_asignada && u.dupla_asignada.length > 1) ? `<div class="notice" style="margin-top:6px">Además tiene: ${u.dupla_asignada.slice(1).map(esc).join(', ')} (se conservan al guardar)</div>` : ''}</div>
+      <div id="eu-dupla-wrap"><label>Dupla asignada</label><select id="eu-dupla">${necesitaPlaceholder ? '<option value="" disabled selected>Elegí una dupla</option>' : ''}${opcionesDupla.map(e => `<option value="${esc(e)}" ${e === duplaActual ? 'selected' : ''}>${esc(e)}${e === duplaActual && duplaActualInactiva ? ' (ya no está activa)' : ''}</option>`).join('')}</select>${duplaActualInactiva ? `<div class="notice" style="margin-top:6px">Esta dupla ya no está activa en el catálogo. Se conserva tal cual si no la cambiás.</div>` : ''}${(u.dupla_asignada && u.dupla_asignada.length > 1) ? `<div class="notice" style="margin-top:6px">Además tiene: ${u.dupla_asignada.slice(1).map(esc).join(', ')} (se conservan al guardar)</div>` : ''}</div>
       <div class="full"><label>Usuario/email</label><input id="eu-email" type="email" value="${esc(u.email || '')}" ${emailsDisponibles ? '' : 'readonly class="readonly"'}>${emailsDisponibles ? '' : '<div class="notice" style="margin-top:6px">No se pudo leer el email actual de este usuario, así que el campo queda bloqueado para no cambiárselo sin querer. Cerrá y recargá la lista de usuarios para poder editarlo.</div>'}</div>
       <div class="full"><label>Nueva contraseña <span style="font-weight:400;color:var(--muted)">(dejar vacío para no cambiarla)</span></label><div class="pass-wrap"><input id="eu-pass" type="password" placeholder="Mínimo 8 caracteres, con mayúscula, minúscula y número"><button type="button" class="pass-toggle" id="eu-pass-toggle"></button></div></div>
     </div>

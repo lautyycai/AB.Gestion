@@ -57,8 +57,13 @@ async function fetchAllRows(tabla) {
       return { data: null, error };
     }
     filas = filas.concat(data || []);
-    if (!data || data.length < PAGE_SIZE) break;
+    // Cortamos SOLO por página vacía, no por "incompleta": si el servidor recortara max-rows a un
+    // valor menor a PAGE_SIZE, una página siempre daría length < PAGE_SIZE aunque quedaran más filas
+    // por traer, y esto truncaría la base entera en silencio (mismo bug ya corregido en el Worker,
+    // ver worker/crear-usuario.js). Con página vacía alcanza para saber que no hay más.
+    if (!data || data.length === 0) break;
     desde += PAGE_SIZE;
+    if (desde > 1000000) break; // cinturón de seguridad, no queremos un loop infinito
   }
   return { data: filas, error: null };
 }

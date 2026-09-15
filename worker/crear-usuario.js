@@ -180,7 +180,11 @@ export default {
         page++;
         if (page > 50) break; // cinturón de seguridad, no queremos un loop infinito
       }
-      return json({ ok: true, usuarios: usuariosAuth }, 200, headers);
+      // Por si algún día la Admin API recortara página en vez de devolver vacía (repitiendo la
+      // última en vez de cortar): un id repetido no rompe nada del lado del front porque arma un
+      // mapa por id, pero de-duplicar acá es gratis y evita depender de eso.
+      const usuariosUnicos = Object.values(Object.fromEntries(usuariosAuth.map(u => [u.id, u])));
+      return json({ ok: true, usuarios: usuariosUnicos }, 200, headers);
     }
 
     // 3.3) Acción "editar_credenciales" (cambiar email de login y/o contraseña, sin depender de un mail real)

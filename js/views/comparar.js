@@ -33,8 +33,10 @@ function serieComparar(dim, valor, trimestres) {
     return trimestres.map(t => D.production.filter(x => x.TRIMESTRE === t).reduce((s, x) => s + (x.COMPANIAS[valor] || 0), 0));
   }
   if (dim === 'ZONA') {
-    const pasesEnZona = new Set(D.producers.filter(p => p.ZONA === valor).map(p => p.PAS));
-    return trimestres.map(t => D.production.filter(x => x.TRIMESTRE === t && pasesEnZona.has(x.PAS)).reduce((s, x) => s + (x.TOTAL || 0), 0));
+    // Por id, no por nombre: dos PAS homónimos en zonas distintas no se pueden distinguir por PAS,
+    // y el filtro sumaba a los dos aunque solo uno estuviera realmente en la zona elegida.
+    const idsEnZona = new Set(D.producers.filter(p => p.ZONA === valor).map(p => p._id));
+    return trimestres.map(t => D.production.filter(x => x.TRIMESTRE === t && idsEnZona.has(x._pas_id)).reduce((s, x) => s + (x.TOTAL || 0), 0));
   }
   const campo = dim === 'PAS' ? 'PAS' : dim === 'ORGANIZACION' ? 'ORGANIZADOR' : dim === 'EJECUTIVO' ? 'EJECUTIVO' : 'RAMO';
   return trimestres.map(t => D.production.filter(x => x.TRIMESTRE === t && x[campo] === valor).reduce((s, x) => s + (x.TOTAL || 0), 0));
@@ -44,8 +46,8 @@ function serieComparar(dim, valor, trimestres) {
 function filasParaDimension(dim, valor) {
   if (dim === 'COMPANIA') return D.production.filter(x => (x.COMPANIAS[valor] || 0) > 0);
   if (dim === 'ZONA') {
-    const pasesEnZona = new Set(D.producers.filter(p => p.ZONA === valor).map(p => p.PAS));
-    return D.production.filter(x => pasesEnZona.has(x.PAS));
+    const idsEnZona = new Set(D.producers.filter(p => p.ZONA === valor).map(p => p._id));
+    return D.production.filter(x => idsEnZona.has(x._pas_id));
   }
   const campo = dim === 'PAS' ? 'PAS' : dim === 'ORGANIZACION' ? 'ORGANIZADOR' : dim === 'EJECUTIVO' ? 'EJECUTIVO' : 'RAMO';
   return D.production.filter(x => x[campo] === valor);
