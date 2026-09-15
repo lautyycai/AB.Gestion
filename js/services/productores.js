@@ -46,7 +46,13 @@ function leerFormPAS() {
     telefono: val('f-tel'),
     mail: val('f-mail'),
     fecha_nacimiento: val('f-fnac') || null,
-    companias_opera: Array.from(document.querySelectorAll('#f-comp-lista input:checked')).map(cb => cb.value).join(', '),
+    // El checklist solo puede tildar compañías activas del catálogo; lo que no matcheaba ninguna
+    // (compañías desactivadas después de que el PAS ya las tuviera cargadas) quedó guardado aparte
+    // por poblarChecklistCompanias() y se pega de vuelta acá, para no perderlo al guardar.
+    companias_opera: [
+      ...Array.from(document.querySelectorAll('#f-comp-lista input:checked')).map(cb => cb.value),
+      ...(document.getElementById('f-comp-lista')?.dataset?.sinMatchear ? [document.getElementById('f-comp-lista').dataset.sinMatchear] : []),
+    ].join(', '),
     observaciones: val('f-obs'),
     estado: val('f-estado') === 'TODOS' ? '' : val('f-estado'),
     zona: val('f-zona') === 'TODOS' ? '' : val('f-zona'),

@@ -171,10 +171,12 @@ export default {
         const data = await resp.json();
         const lote = data.users || [];
         usuariosAuth = usuariosAuth.concat(lote.map(u => ({ id: u.id, email: u.email })));
-        // Cortamos por lote vacío además de por lote incompleto: si el servidor recorta per_page
-        // a un máximo menor al pedido, "lote.length < PER_PAGE" da siempre true y solo se traía
-        // la primera página, dejando al resto de los usuarios sin email y sin ningún aviso.
-        if (lote.length === 0 || lote.length < PER_PAGE) break;
+        // Cortamos SOLO por lote vacío, no por "lote incompleto": si el servidor recorta per_page
+        // a un máximo menor al pedido, un lote siempre da length < PER_PAGE aunque queden más
+        // páginas -- cortar por eso dejaba al resto de los usuarios sin email y sin ningún aviso.
+        // Con lote vacío alcanza para saber que no hay más, y el cinturón de seguridad de abajo
+        // sigue cubriendo el caso de que algo ande mal y nunca llegue un lote vacío.
+        if (lote.length === 0) break;
         page++;
         if (page > 50) break; // cinturón de seguridad, no queremos un loop infinito
       }

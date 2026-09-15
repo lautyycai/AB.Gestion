@@ -66,11 +66,15 @@ async function abrirFormPAS(pasExistente) {
   formPasVersion = esEdicion ? p._version : null;
 }
 
-// Arma la lista con checkbox de todas las compañías del catálogo, tildando las que el PAS ya tenía cargadas
+// Arma la lista con checkbox de todas las compañías del catálogo, tildando las que el PAS ya tenía cargadas.
+// Lo que el PAS tenía cargado y no matchea ninguna compañía activa (por lo general, una que se
+// desactivó del catálogo) no tiene casilla para mostrarse -- se guarda en un data-attribute para que
+// leerFormPAS() lo pegue de vuelta al guardar y no se pierda en silencio.
 function poblarChecklistCompanias(valorExistente) {
   const yaTenia = new Set(companiasDelTexto(valorExistente, D.catalog.companias));
   const companiasOrdenadas = [...D.catalog.companias].sort((a, b) => a.localeCompare(b, 'es'));
   const cont = document.getElementById('f-comp-lista');
+  cont.dataset.sinMatchear = companiasSinMatchear(valorExistente, D.catalog.companias);
   cont.innerHTML = companiasOrdenadas.map(c => {
     const marcado = yaTenia.has(c);
     return `<label data-nombre="${esc(c.toLowerCase())}"><input type="checkbox" value="${esc(c)}" ${marcado ? 'checked' : ''}>${esc(c)}</label>`;

@@ -220,7 +220,10 @@ function ficha(pasId) {
           btnBorrarTodoProd.disabled = false;
           if (error) { mostrarToast(error.message, 'error'); return; }
           if (typeof data === 'number' && data < rowsCompletas.length) {
-            mostrarToast(`Se borraron ${data} de ${rowsCompletas.length} cargas — las demás pertenecen a otra dupla y no tenías permiso para borrarlas.`, 'error');
+            // eliminar_producciones_pas valida el permiso sobre el PAS entero antes de borrar, así
+            // que nunca decide "estas sí, esas no" por dupla -- si el número no coincide es porque
+            // otra sesión modificó o borró algo de este PAS mientras tanto, no un tema de permisos.
+            mostrarToast(`Se borraron ${data} de ${rowsCompletas.length} cargas — el resto se ve distinto a como estaba, probablemente porque alguien más lo tocó mientras tanto. Revisá la ficha actualizada.`, 'error');
           }
           D = await cargarDatos();
           render();
